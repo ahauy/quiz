@@ -6,7 +6,7 @@
 | :--- | :--- | :--- | :--- |
 | `install` | — | checkout → pnpm 9.15.9 → Node 22 → `pnpm install --frozen-lockfile` | yes |
 | `quality` | install | `prisma generate` → `lint` → `typecheck` → `prisma validate` → `test` → `build` | yes |
-| `e2e` | quality | Postgres 16 service (health check) → prisma generate/migrate → Playwright chromium → `test:e2e` | yes |
+| `e2e` | quality | Postgres 16 service (health check) → prisma generate/migrate → Playwright chromium (tự bật API :3000 + web :5173) → `test:e2e` | yes |
 
 ## Triggers
 
