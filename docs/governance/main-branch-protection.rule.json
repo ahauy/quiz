@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": "1.0",
+  "ruleId": "GOV-BRANCH-001",
+  "name": "protect-main-require-ci-pass",
+  "description": "Bảo vệ nhánh main: không ai được merge hoặc đẩy trực tiếp vào main. Mọi pull request / merge request nhắm tới main chỉ được merge sau khi pipeline CI đã chạy và pass toàn bộ (install, quality, e2e). Áp dụng cho mọi actor, kể cả admin, không có bypass.",
+  "enabled": true,
+  "enforcement": {
+    "level": "blocking",
+    "actionOnViolation": "deny",
+    "bypassAllowed": false,
+    "bypassActors": [],
+    "evaluationPoint": "pre-merge"
+  },
+  "scope": {
+    "repository": "quiz-web",
+    "protectedBranches": ["main"],
+    "appliesTo": [
+      "pull_request",
+      "merge_request",
+      "direct_merge",
+      "direct_push"
+    ],
+    "actorScope": "all",
+    "exemptActors": []
+  },
+  "activationCondition": {
+    "logic": "AND",
+    "conditions": [
+      {
+        "id": "C1",
+        "field": "event.targetBranch",
+        "operator": "in",
+        "value": ["main"],
+        "description": "Đích của thao tác là nhánh main (refs/heads/main)."
+      },
+      {
+        "id": "C2",
+        "field": "event.type",
+        "operator": "in",
+        "value": ["pull_request", "merge_request", "direct_merge", "direct_push"],
+        "description": "Thao tác là PR/MR hoặc merge/đẩy trực tiếp."
+      },
+      {
+        "id": "C3",
+        "field": "event.action",
+        "operator": "in",
+        "value": ["open", "synchronize", "reopen", "merge", "push"],
+        "description": "Kích hoạt lại khi head commit thay đổi hoặc khi thực hiện merge/push."
+      }
+    ]
+  },
+  "requiredCondition": {
+    "id": "CI-ALL-PASS",
+    "type": "ci_pipeline_success",
+    "description": "Điều kiện bắt buộc: pipeline CI cho đúng head commit của PR/MR phải chạy xong với trạng thái success ở mọi job.",
+    "pipeline": {
+      "provider": "github_actions",
+      "workflowFile": ".github/workflows/ci.yml",
+      "workflowName": "CI",
+      "triggerEvents": ["pull_request", "push"]
+    },
+    "requiredChecks": [
+      { "name": "install", "conclusion": "success" },
+      { "name": "quality", "conclusion": "success" },
+      { "name": "e2e", "conclusion": "success" }
+    ],
+    "rules": {
+      "allChecksMustPass": true,
+      "noSkippedChecks": true,
+      "mustMatchHeadSha": true,
+      "mustBeOnPullRequest": true,
+      "staleResultPolicy": "deny",
+      "missingResultPolicy": "deny"
+    },
+    "staleAfterHours": 24
+  },
+  "blockingBehavior": {
+    "onConditionMet": "allow",
+    "onRequiredConditionFailed": "deny",
+    "onRequiredConditionMissing": "deny",
+    "onEvaluatorError": "deny",
+    "sideEffects": [
+      "Giữ PR/MR ở trạng thái blocked, không cho bấm merge.",
+      "Gắn status check bắt buộcFailed/Expected trên PR.",
+      "Ghi audit log với ruleId, actor, headSha và lý do chặn."
+    ],
+    "frameworkHookCompatibility": {
+      "decision": "deny",
+      "reasonField": "reason",
+      "note": "Khi dùng với .agents/scripts/hooks, map errorMessage sang reason trong output JSON."
+    }
+  },
+  "errorMessage": {
+    "title": "BLOCKED: Merge vào main bị từ chối",
+    "message": "Không được merge/đẩy trực tiếp vào nhánh 'main'. Rule GOV-BRANCH-001 yêu cầu mọi PR/MR vào main phải có pipeline CI chạy và pass toàn bộ (install, quality, e2e) trên đúng head commit của PR.",
+    "details": [
+      "Lý do: {violationReason}.",
+      "PR/MR: {pullRequestId} | headSha: {headSha} | actor: {actor}.",
+      "Hành động: chạy lại CI trên PR, đợi tất cả check chuyển success, sau đó merge qua nút merge của PR.",
+      "Không có bypass: admin và maintainers cũng bị chặn như mọi actor khác."
+    ],
+    "format": "{title}\n\n{message}\n\n{details}",
+    "localization": "vi"
+  },
+  "audit": {
+    "logAllowed": true,
+    "logDenied": true,
+    "fields": ["ruleId", "timestamp", "actor", "event", "targetBranch", "headSha", "decision", "violationReason"]
+  },
+  "references": {
+    "ciWorkflow": ".github/workflows/ci.yml",
+    "ciBaselineDoc": "docs/sprint-0/ci-baseline.md",
+    "frameworkHook": ".agents/scripts/hooks/prevent-direct-main-commit.js",
+    "frameworkHookConfig": ".agents/hooks.json",
+    "gitWorkflowRule": ".agents/rules/common/git-workflow.md"
+  },
+  "notes": [
+    "DEPRECATED FOR GITHUB IMPORT: file này là policy declaration tự định nghĩa, KHÔNG phải schema import của GitHub Rulesets. Để import trong GitHub UI (Settings > Rules > Rulesets > Import a ruleset), dùng main-branch-protection.github-ruleset.json cùng thư mục.",
+    " enforcement thực thi bởi GitHub Ruleset trên remote; file này chỉ làm specification/audit tại repo.",
+    "Repo hiện chưa có remote (git remote -v trống); khi thêm remote, import file github-ruleset tương ứng.",
+    "Không set '$schema' tới file-local; schemaVersion dùng để version hóa cấu trúc rule."
+  ]
+}
