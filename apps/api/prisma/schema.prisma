@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Sprint 0 skeleton only. Domain models land with their user stories:
+// US-AUTH-001 (User, Role), US-CLS-001 (Classroom, Enrollment),
+// US-QB-001 (Question, Option, Subject, Chapter), US-EXAM-001 (Exam),
+// US-ATT-001 (Attempt, Answer, Violation, ActiveSession).
+model HealthProbe {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+}
