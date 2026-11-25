@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+  quality:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm --filter api prisma validate
+      - run: pnpm test
+      - run: pnpm build
+
+  e2e:
+    needs: quality
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_USER: quiz
+          POSTGRES_PASSWORD: quiz_ci_only
+          POSTGRES_DB: quiz
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U quiz -d quiz"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://quiz:quiz_ci_only@localhost:5432/quiz?schema=public
+      JWT_SECRET: ci-only-secret-at-least-32-characters-long
+      JWT_REFRESH_SECRET: ci-only-refresh-secret-at-least-32-chars
+      TEACHER_CODE: CI-TEACHER-CODE
+      OAUTH_GOOGLE_CLIENT_ID: ci-client-id
+      OAUTH_GOOGLE_CLIENT_SECRET: ci-client-secret
+      VITE_API_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter api prisma generate
+      - run: pnpm --filter api prisma migrate deploy
+      - run: pnpm --filter web exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
