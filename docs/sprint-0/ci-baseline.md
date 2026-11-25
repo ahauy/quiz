@@ -5,7 +5,7 @@
 | Job | Depends on | Steps | Blocking |
 | :--- | :--- | :--- | :--- |
 | `install` | — | checkout → pnpm 9.15.9 → Node 22 → `pnpm install --frozen-lockfile` | yes |
-| `quality` | install | `lint` → `typecheck` → `prisma validate` → `test` → `build` | yes |
+| `quality` | install | `prisma generate` → `lint` → `typecheck` → `prisma validate` → `test` → `build` | yes |
 | `e2e` | quality | Postgres 16 service (health check) → prisma generate/migrate → Playwright chromium → `test:e2e` | yes |
 
 ## Triggers
@@ -17,6 +17,8 @@
 ## Secrets & environment
 
 - No real secrets in YAML. CI-only placeholder values are 32+ chars to pass `envSchema` and are **not** production credentials.
+- `quality` sets a CI-only `DATABASE_URL` because `prisma validate` resolves `env("DATABASE_URL")`; no database connection is made in this job.
+- `prisma generate` must run **before** `typecheck` in `quality`: pnpm's `@prisma/client` postinstall cannot find the schema at `apps/api/prisma/schema.prisma` from repo root, and the cached install skips postinstall entirely. Without it `PrismaClient`/`$queryRaw` do not exist on generated types.
 - Production secrets (`JWT_SECRET`, `OAUTH_GOOGLE_*`, `DATABASE_URL`) come from GitHub Secrets at Go-Live — not configured in Sprint 0.
 
 ## Deliberate omissions
