@@ -40,6 +40,11 @@ Health check: `curl http://localhost:3000/health` → `{"status":"ok","database"
 | `ERR_PNPM_EIO` on incremental install | Partially written `node_modules` from an interrupted run | `rm -rf node_modules apps/*/node_modules packages/*/node_modules` then `corepack pnpm install --ignore-scripts` |
 | Docker daemon unavailable | Docker Desktop not running | `open -a Docker`, wait for `docker info` to succeed |
 | `RoleGuard` renders nothing | No session in Zustand store | Expected in Sprint 0 — real auth lands in `US-AUTH-001` |
+| CI `TS2307: Cannot find module 'express'` | `@types/express` was only in a global type folder on dev machine, not declared in the workspace | Declared `@types/express` in `apps/api/devDependencies`; keep types local to the package |
+| CI `PrismaClient has no exported member` / `$queryRaw does not exist` | `quality` job restored pnpm cache and skipped `@prisma/client` postinstall, which cannot locate `apps/api/prisma/schema.prisma` from repo root | `prisma generate` runs explicitly before `typecheck` (see `.github/workflows/ci.yml`) |
+| CI `prisma validate` fails on missing `DATABASE_URL` | `quality` job has no `.env` | CI-only `DATABASE_URL` is set at job level; no real DB needed |
+| CI `e2e`: `ECONNREFUSED ::1:3000` / `127.0.0.1:3000` | `webServer` only started Vite; no process served the API, so `/health` had no listener | `playwright.config.ts` now starts both `apps/api` (`:3000/health`) and `apps/web` (`:5173`) via Playwright `webServer[]` |
+| Playwright webServer exits with pnpm version error | `command: "pnpm dev"` resolved global pnpm 11 instead of pinned 9 | Use `corepack pnpm ...` in every `webServer` command |
 
 ## What is intentionally empty
 
