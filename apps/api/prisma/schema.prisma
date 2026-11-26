@@ -12,6 +12,11 @@ enum Role {
   STUDENT
 }
 
+enum EnrollmentStatus {
+  PENDING
+  APPROVED
+}
+
 // Sprint 0 skeleton probe kept for the accepted baseline migration.
 model HealthProbe {
   id        Int      @id @default(autoincrement())
@@ -31,6 +36,8 @@ model User {
   refreshTokens       RefreshToken[]
   oauthAccounts       OAuthAccount[]
   passwordResetTokens PasswordResetToken[]
+  classrooms          Classroom[]
+  enrollments         Enrollment[]
 }
 
 model RefreshToken {
@@ -69,5 +76,40 @@ model PasswordResetToken {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+}
+
+model Classroom {
+  id          String       @id @default(uuid())
+  name        String
+  teacherId   String
+  teacher     User         @relation(fields: [teacherId], references: [id])
+  code        ClassCode?
+  enrollments Enrollment[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([teacherId])
+}
+
+model ClassCode {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  classroomId String    @unique
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+}
+
+model Enrollment {
+  id          String           @id @default(uuid())
+  classroomId String
+  userId      String
+  status      EnrollmentStatus @default(PENDING)
+  classroom   Classroom        @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime         @default(now())
+  approvedAt  DateTime?
+
+  @@unique([classroomId, userId])
   @@index([userId])
 }

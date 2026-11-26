@@ -27,6 +27,12 @@ export const ExamStatus = {
 } as const;
 export type ExamStatus = (typeof ExamStatus)[keyof typeof ExamStatus];
 
+export const EnrollmentStatus = {
+  PENDING: "PENDING",
+  APPROVED: "APPROVED",
+} as const;
+export type EnrollmentStatus = (typeof EnrollmentStatus)[keyof typeof EnrollmentStatus];
+
 export const ViolationType = {
   TAB_SWITCH: "TAB_SWITCH",
   FULLSCREEN_EXIT: "FULLSCREEN_EXIT",

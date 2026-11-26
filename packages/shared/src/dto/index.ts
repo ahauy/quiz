@@ -1,4 +1,4 @@
-import type { Difficulty, QuestionType, Role } from "../enums/index.js";
+import type { Difficulty, EnrollmentStatus, QuestionType, Role } from "../enums/index.js";
 
 export interface BaseQuestionDto {
   id: string;
@@ -83,4 +83,31 @@ export interface ForgotPasswordResultDto {
 
 export interface OkDto {
   ok: true;
+}
+
+export interface ClassroomDto {
+  id: string;
+  name: string;
+  code: string;
+  teacherId: string;
+  createdAt: string;
+}
+
+export interface EnrollmentDto {
+  id: string;
+  classroomId: string;
+  userId: string;
+  displayName: string;
+  email: string;
+  status: EnrollmentStatus;
+  createdAt: string;
+  approvedAt?: string;
+}
+
+export interface CreateClassroomDto {
+  name: string;
+}
+
+export interface JoinClassroomDto {
+  code: string;
 }
