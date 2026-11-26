@@ -7,11 +7,67 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Sprint 0 skeleton only. Domain models land with their user stories:
-// US-AUTH-001 (User, Role), US-CLS-001 (Classroom, Enrollment),
-// US-QB-001 (Question, Option, Subject, Chapter), US-EXAM-001 (Exam),
-// US-ATT-001 (Attempt, Answer, Violation, ActiveSession).
+enum Role {
+  TEACHER
+  STUDENT
+}
+
+// Sprint 0 skeleton probe kept for the accepted baseline migration.
 model HealthProbe {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  displayName  String
+  passwordHash String?
+  role         Role     @default(STUDENT)
+  tokenVersion Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  refreshTokens       RefreshToken[]
+  oauthAccounts       OAuthAccount[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model OAuthAccount {
+  id                String   @id @default(uuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
