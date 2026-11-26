@@ -125,7 +125,7 @@ Decision log: docs/SPRINT_0_PLAN.md section 8 (8/8 locked 2026-11-25).
 
 > **Mục tiêu Sprint:** Giáo viên tạo được đề và giao cho lớp; học sinh làm bài trong giới hạn thời gian, nộp bài và nhận điểm tự động — không cần Admin, không cần module mở rộng.
 
-- [ ] **US-AUTH-001**: Đăng ký, đăng nhập (Email+Password + OAuth), quên mật khẩu & phân quyền 2 vai trò
+- [/] **US-AUTH-001**: Đăng ký, đăng nhập (Email+Password + OAuth), quên mật khẩu & phân quyền 2 vai trò
   - **Slug:** `auth-role-foundation`
   - **Effort:** M
   - **Context-budget:** single-session
@@ -134,15 +134,16 @@ Decision log: docs/SPRINT_0_PLAN.md section 8 (8/8 locked 2026-11-25).
   - **Blocks:** `US-CLS-001`, `US-QB-001`, `US-EXAM-001`, `US-ATT-001`
   - **Mô tả:** Giáo viên và học sinh có tài khoản riêng, đăng nhập được bằng mật khẩu hoặc OAuth, và chỉ thấy chức năng phù hợp với vai trò của mình.
   - **Acceptance Criteria (AC):**
-    - [ ] Người dùng đăng ký bằng email/password và đăng nhập được ngay sau đó.
-    - [ ] Người dùng đăng nhập được bằng tài khoản OAuth `ASM-BACKLOG-04`.
-    - [ ] Người dùng quên mật khẩu yêu cầu đặt lại và dùng liên kết đặt lại thành công trong thời hạn.
-    - [ ] Hệ thống chỉ có 2 vai trò Giáo viên / Học sinh; người dùng không tự cấp được quyền Quản trị viên.
-    - [ ] Người dùng cập nhật thông tin cá nhân và đổi mật khẩu; mật khẩu cũ không còn sử dụng được.
-    - [ ] Sau khi đăng xuất, phiếu đăng nhập hết hiệu lực và trang yêu cầu đăng nhập từ chối truy cập.
+    - [x] Người dùng đăng ký bằng email/password và đăng nhập được ngay sau đó.
+    - [ ] Người dùng đăng nhập được bằng tài khoản OAuth `ASM-BACKLOG-04`. _(Code hoàn thành + unit test; chưa chạy E2E Google thật — cần tài khoản test và consent. Xem ghi chú dưới.)_
+    - [x] Người dùng quên mật khẩu yêu cầu đặt lại và dùng liên kết đặt lại thành công trong thời hạn.
+    - [x] Hệ thống chỉ có 2 vai trò Giáo viên / Học sinh; người dùng không tự cấp được quyền Quản trị viên.
+    - [x] Người dùng cập nhật thông tin cá nhân và đổi mật khẩu; mật khẩu cũ không còn sử dụng được.
+    - [x] Sau khi đăng xuất, phiếu đăng nhập hết hiệu lực và trang yêu cầu đăng nhập từ chối truy cập.
   - **Tasks (Phân rã kỹ thuật cho Subagents):**
-    - [ ] **Backend:** `POST /auth/register`, `/auth/login`, `/auth/oauth/:provider/callback`, `/auth/forgot-password`, `/auth/reset-password`, `/auth/logout`, `GET/PATCH /me`; DTO class-validator; Prisma `User`/`Role`/`RefreshToken`/`OAuthAccount` + migration; JWT access/refresh; RBAC guard; băm mật khẩu; rule cấp quyền Giáo viên `ASM-BACKLOG-06`.
-    - [ ] **Frontend:** Trang Register/Login/Forgot/Reset + OAuth callback + Profile; route guard theo vai trò; form shadcn/ui + zod; Zustand auth store; xử lý refresh token.
+    - [x] **Backend:** `POST /auth/register`, `/auth/login`, `/auth/oauth/google/url`, `/auth/oauth/google/callback`, `/auth/forgot-password`, `/auth/reset-password`, `/auth/logout`, `/auth/refresh`, `GET/PATCH /auth/me`; DTO class-validator; Prisma `User`/`Role`/`RefreshToken`/`OAuthAccount`/`PasswordResetToken` + migration; JWT access/refresh; RBAC guard; băm mật khẩu; rule cấp quyền Giáo viên `ASM-BACKLOG-06`.
+    - [x] **Frontend:** Trang Register/Login/Forgot/Reset + OAuth callback + Profile; route guard theo vai trò; form shadcn/ui + zod; Zustand auth store; xử lý refresh token.
+  - **Trạng thái 2026-11-25:** 5/6 AC verified (132 unit tests, 8 E2E pass). Chỉ còn AC OAuth: chạy lệnh opt-in `corepack pnpm --filter web test:e2e:google` với tài khoản Google test (`E2E_GOOGLE_EMAIL`, `E2E_GOOGLE_PASSWORD`) và client Google đã đăng ký redirect URI. **KHÔNG implement lại story này** khi `/continue` — chỉ chạy bước verify còn lại, sau đó chuyển `[x]`. Chi tiết: `.specify/features/auth-role-foundation/decisions.md`, `docs/features/auth-role-foundation/README.md`.
   - **Deliverables khi [x]:**
     - `.specify/features/auth-role-foundation/baseline.md` (SIGNED-OFF)
     - `docs/features/auth-role-foundation/README.md`

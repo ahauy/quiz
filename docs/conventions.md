@@ -46,3 +46,19 @@
 
 - Never `git add`, `commit`, `push`, rebase, or resolve conflicts autonomously.
 - Only `/command-git-push` may perform writes to history.
+
+## Folder structure (confirmed 2026-11-25)
+
+### Backend (`apps/api/src`)
+
+- One folder per bounded context. `module`, `controller`, `service` stay at the feature root; supporting layers are subfolders: `dto/`, `schemas/`, `services/`, `repositories/`, `guards/`, `decorators/`, `utils/`, `testing/`.
+- Cross-cutting code lives in `common/` (`filters/`, `guards/`, `decorators/`, `schemas/`), plus `config/` and `prisma/`.
+- Specs are colocated with the file they test. Prisma migrations stay under `apps/api/prisma/migrations/`.
+- Use the existing `.js` extension import style in TypeScript source.
+
+### Frontend (`apps/web/src`)
+
+- One folder per route under `pages/<page>/`, containing `<page>-page.tsx` and `index.ts`. Add `components/`, `dialogs/`, `hooks/`, `services/` only when page-local code exists; never create empty placeholder folders.
+- Shared code stays outside `pages/`: `app/` (composition/routing), `components/ui/`, `lib/`, `stores/`.
+- Use `@/*` for cross-folder imports and `./` inside the same folder. The alias is configured in `tsconfig.json`, `vite.config.ts`, and `vitest.config.ts`.
+- Route paths and UI labels are not changed by a folder move.
