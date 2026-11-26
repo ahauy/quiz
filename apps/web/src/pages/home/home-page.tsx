@@ -21,14 +21,27 @@ export function HomePage() {
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => navigate("/profile")}>Hồ sơ</Button>
           {role === Role.TEACHER ? (
-            <Button variant="secondary" onClick={() => navigate("/teacher")}>
-              Khu vực giáo viên
-            </Button>
+            <>
+              <Button variant="secondary" onClick={() => navigate("/teacher")}>
+                Khu vực giáo viên
+              </Button>
+              <Button variant="secondary" onClick={() => navigate("/teacher/classrooms")}>
+                Lớp học
+              </Button>
+            </>
           ) : null}
           {role === Role.STUDENT ? (
-            <Button variant="secondary" onClick={() => navigate("/student")}>
-              Khu vực học sinh
-            </Button>
+            <>
+              <Button variant="secondary" onClick={() => navigate("/student")}>
+                Khu vực học sinh
+              </Button>
+              <Button variant="secondary" onClick={() => navigate("/student/classrooms")}>
+                Lớp học
+              </Button>
+              <Button variant="secondary" onClick={() => navigate("/student/join")}>
+                Tham gia lớp học
+              </Button>
+            </>
           ) : null}
         </div>
       )}

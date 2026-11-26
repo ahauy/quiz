@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   changePasswordSchema,
+  createClassroomSchema,
   fieldErrors,
   getErrorMessage,
+  joinByCodeSchema,
   loginSchema,
   registerSchema,
   resetPasswordSchema,
@@ -67,6 +69,30 @@ describe("changePasswordSchema", () => {
     expect(bad.success).toBe(false);
     if (!bad.success) {
       expect(fieldErrors(bad.error).confirmPassword).toBeDefined();
+    }
+  });
+});
+
+describe("createClassroomSchema", () => {
+  it("trims a valid class name and rejects an empty one", () => {
+    expect(createClassroomSchema.parse({ name: "  Toán 10A  " })).toEqual({ name: "Toán 10A" });
+    expect(createClassroomSchema.safeParse({ name: "   " }).success).toBe(false);
+  });
+});
+
+describe("joinByCodeSchema", () => {
+  it("accepts a 6-character code and normalises case and whitespace", () => {
+    expect(joinByCodeSchema.parse({ code: " abc234 " })).toEqual({ code: "ABC234" });
+  });
+
+  it("rejects wrong lengths and non-alphanumeric codes", () => {
+    expect(joinByCodeSchema.safeParse({ code: "ABC23" }).success).toBe(false);
+    expect(joinByCodeSchema.safeParse({ code: "ABC2345" }).success).toBe(false);
+    expect(joinByCodeSchema.safeParse({ code: "AB-234" }).success).toBe(false);
+    const empty = joinByCodeSchema.safeParse({ code: "" });
+    expect(empty.success).toBe(false);
+    if (!empty.success) {
+      expect(fieldErrors(empty.error).code).toBe("Mã lớp là bắt buộc");
     }
   });
 });

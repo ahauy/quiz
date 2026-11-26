@@ -11,6 +11,9 @@ import { OAuthCallbackPage } from "@/pages/oauth-callback";
 import { ProfilePage } from "@/pages/profile";
 import { TeacherPage } from "@/pages/teacher";
 import { StudentPage } from "@/pages/student";
+import { TeacherClassroomsPage } from "@/pages/teacher-classrooms";
+import { StudentClassroomsPage } from "@/pages/student-classrooms";
+import { JoinByCodePage } from "@/pages/join-by-code";
 
 interface GuardProps {
   allow: readonly Role[];
@@ -58,6 +61,30 @@ export function AppRoutes() {
         element={
           <RoleGuard allow={[Role.STUDENT]}>
             <StudentPage />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/teacher/classrooms"
+        element={
+          <RoleGuard allow={[Role.TEACHER]}>
+            <TeacherClassroomsPage />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/student/classrooms"
+        element={
+          <RoleGuard allow={[Role.STUDENT]}>
+            <StudentClassroomsPage />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/student/join"
+        element={
+          <RoleGuard allow={[Role.STUDENT]}>
+            <JoinByCodePage />
           </RoleGuard>
         }
       />
