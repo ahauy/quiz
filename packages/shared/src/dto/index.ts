@@ -59,3 +59,28 @@ export interface RegisterDto {
   teacherCode?: string;
   requestedRole?: Role;
 }
+
+export interface UserDto {
+  id: string;
+  email: string;
+  displayName: string;
+  role: Role;
+}
+
+export interface AuthResultDto {
+  accessToken: string;
+  user: UserDto;
+}
+
+export interface AuthUrlDto {
+  url: string;
+}
+
+export interface ForgotPasswordResultDto {
+  message: string;
+  resetUrl?: string;
+}
+
+export interface OkDto {
+  ok: true;
+}

@@ -1,22 +1,10 @@
-import { Controller, Get, Injectable, Module } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service.js";
+import { Controller, Get } from "@nestjs/common";
+import { Public } from "../auth/decorators/public.decorator.js";
+import { HealthService } from "./health.service.js";
 
-@Injectable()
-class HealthService {
-  constructor(private readonly prisma: PrismaService) {}
-
-  async isDatabaseReady(): Promise<boolean> {
-    try {
-      await this.prisma.$queryRaw`SELECT 1`;
-      return true;
-    } catch {
-      return false;
-    }
-  }
-}
-
+@Public()
 @Controller("health")
-class HealthController {
+export class HealthController {
   constructor(private readonly health: HealthService) {}
 
   @Get()
@@ -29,9 +17,3 @@ class HealthController {
     };
   }
 }
-
-@Module({
-  controllers: [HealthController],
-  providers: [HealthService],
-})
-export class HealthModule {}

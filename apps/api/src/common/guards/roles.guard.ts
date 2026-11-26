@@ -4,13 +4,10 @@ import {
   ForbiddenException,
   Injectable,
   UnauthorizedException,
-  SetMetadata,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { Role } from "@quiz/shared";
-
-export const ROLES_KEY = "roles";
-export const Roles = (...roles: readonly Role[]) => SetMetadata(ROLES_KEY, roles);
+import type { Role } from "@quiz/shared";
+import { ROLES_KEY } from "../decorators/roles.decorator.js";
 
 interface RequestWithUser {
   user?: { id: string; role: Role };
