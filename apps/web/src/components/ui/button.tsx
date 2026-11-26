@@ -15,7 +15,7 @@ const variantClass: Record<Variant, string> = {
 export function Button({ variant = "primary", className = "", children, ...rest }: ButtonProps) {
   return (
     <button
-      className={`rounded-md px-3 py-2 text-sm font-medium disabled:opacity-50 ${variantClass[variant]} ${className}`}
+      className={`rounded-md px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${variantClass[variant]} ${className}`}
       {...rest}
     >
       {children}
