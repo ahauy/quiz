@@ -8,9 +8,9 @@
 | Story | Slug | Sprint / Epic | Priority | Tech README | Status |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | `US-AUTH-001` | `auth-role-foundation` | Sprint 1 · EPIC-01 | Must-Have (P0) | [README](./auth-role-foundation/README.md) | Documented |
-| `US-CLS-001` | `classroom-join-code` | Sprint 1 · EPIC-02 | Must-Have (P0) | — | Pending |
-| `US-QB-001` | `question-bank-core` | Sprint 1 · EPIC-02 | Must-Have (P0) | — | Pending |
-| `US-EXAM-001` | `exam-authoring-assignment` | Sprint 1 · EPIC-03 | Must-Have (P0) | — | Pending |
+| `US-CLS-001` | `classroom-join-code` | Sprint 1 · EPIC-02 | Must-Have (P0) | [README](./classroom-join-code/README.md) | Documented |
+| `US-QB-001` | `question-bank-core` | Sprint 1 · EPIC-02 | Must-Have (P0) | [README](./question-bank-core/README.md) | Documented |
+| `US-EXAM-001` | `exam-authoring-assignment` | Sprint 1 · EPIC-03 | Must-Have (P0) | [README](./exam-authoring-assignment/README.md) | Documented |
 | `US-ATT-001` | `timed-attempt-grading` | Sprint 1 · EPIC-04 | Must-Have (P0) | — | Pending |
 | `US-QB-002` | `question-import-rich-content` | Sprint 2 · EPIC-02 | Should-Have (P1) | — | Pending |
 | `US-EXAM-002` | `exam-auto-generation-matrix` | Sprint 2 · EPIC-03 | Should-Have (P1) | — | Pending |
