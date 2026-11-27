@@ -18,7 +18,8 @@ function getCall(index: number): [string, RequestInit] {
 }
 
 function headersOf(options: RequestInit): Record<string, string> {
-  return options.headers as Record<string, string>;
+  const headers = new Headers(options.headers);
+  return Object.fromEntries(headers.entries());
 }
 
 const okSchema = z.object({ ok: z.literal(true) });
@@ -48,7 +49,7 @@ describe("apiRequest", () => {
     configureApiClient({ getAccessToken: () => "tok-123", refresh: async () => null });
     fetchMock.mockResolvedValue(jsonResponse({ data: { ok: true } }));
     await apiRequest("/auth/me", { schema: okSchema });
-    expect(headersOf(getCall(0)[1]).Authorization).toBe("Bearer tok-123");
+    expect(headersOf(getCall(0)[1]).authorization).toBe("Bearer tok-123");
   });
 
   it("omits the Authorization header when there is no token", async () => {
@@ -66,7 +67,7 @@ describe("apiRequest", () => {
     });
     const [, options] = getCall(0);
     expect(options.method).toBe("POST");
-    expect(headersOf(options)["Content-Type"]).toBe("application/json");
+    expect(headersOf(options)["content-type"]).toBe("application/json");
     expect(JSON.parse(String(options.body))).toEqual({ email: "a@b.com", password: "secret12" });
   });
 
@@ -96,7 +97,60 @@ describe("apiRequest", () => {
     expect(result).toEqual({ ok: true });
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(headersOf(getCall(1)[1]).Authorization).toBe("Bearer new-token");
+    expect(headersOf(getCall(1)[1]).authorization).toBe("Bearer new-token");
+  });
+
+  it("preserves caller headers and the serialized body across the 401 replay", async () => {
+    const refresh = vi.fn(async () => "new-token");
+    configureApiClient({ getAccessToken: () => "old-token", refresh });
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse({ code: "UNAUTHORIZED", message: "expired" }, 401))
+      .mockResolvedValueOnce(jsonResponse({ data: { ok: true } }));
+    const body = { mutationId: "m-1", nested: { title: "Draft A" } };
+    const request = apiRequest("/teacher/exams/e-1", {
+      method: "PATCH",
+      body,
+      headers: { "If-Match": '"rep-1-2-DRAFT"', "X-Caller": "kept" },
+      schema: okSchema,
+    });
+    body.nested.title = "mutated after dispatch";
+    await request;
+    const [, first] = getCall(0);
+    const [, retry] = getCall(1);
+    expect(headersOf(first)).toMatchObject({
+      "if-match": '"rep-1-2-DRAFT"',
+      "x-caller": "kept",
+      authorization: "Bearer old-token",
+    });
+    expect(headersOf(retry)).toMatchObject({
+      "if-match": '"rep-1-2-DRAFT"',
+      "x-caller": "kept",
+      authorization: "Bearer new-token",
+    });
+    expect(retry.body).toBe(first.body);
+    expect(JSON.parse(String(retry.body))).toEqual({ mutationId: "m-1", nested: { title: "Draft A" } });
+  });
+
+  it("projects successful response headers only when requested", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ data: { ok: true } }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ETag: '"rep-1-2-DRAFT"' },
+      }),
+    );
+    const projected = await apiRequest("/teacher/exams/e-1", {
+      schema: okSchema,
+      includeResponse: true,
+    });
+    expect(projected.data).toEqual({ ok: true });
+    expect(projected.headers.get("ETag")).toBe('"rep-1-2-DRAFT"');
+  });
+
+  it("keeps malformed successful bodies distinguishable from definite HTTP errors", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ data: { wrong: 1 } }));
+    await expect(apiRequest("/teacher/exams", { schema: z.object({ id: z.string() }) })).rejects.toMatchObject({
+      source: "invalid-success",
+    });
   });
 
   it("does not loop when the retry also returns 401", async () => {
