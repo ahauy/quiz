@@ -14,8 +14,8 @@ schema-version: "1.2"
 # 🗺️ Product Backlog & Execution Roadmap
 
 > **Sản phẩm:** Web thi trắc nghiệm online — Giáo viên ra đề, học sinh làm bài có giới hạn thời gian, chấm điểm tự động.
-> **Cập nhật lần cuối:** 2026-11-25
-> **Nguồn scope:** `/Users/vutuanhau/Downloads/chuc-nang-web-thi-trac-nghiem.md` + xác nhận grilling 2026-11-25.
+> **Cập nhật lần cuối:** 2026-11-26
+> **Nguồn scope:** `chuc-nang-web-thi-trac-nghiem.md` (tài liệu đầu vào local) + xác nhận grilling 2026-11-25.
 > **Trạng thái tài liệu:** Living Document — Quản lý tiến độ và đồng bộ với `/command-continue-project`.
 >
 > **Ký hiệu trạng thái:**
@@ -144,55 +144,61 @@ Decision log: docs/SPRINT_0_PLAN.md section 8 (8/8 locked 2026-11-25).
     - [x] **Backend:** `POST /auth/register`, `/auth/login`, `/auth/oauth/google/url`, `/auth/oauth/google/callback`, `/auth/forgot-password`, `/auth/reset-password`, `/auth/logout`, `/auth/refresh`, `GET/PATCH /auth/me`; DTO class-validator; Prisma `User`/`Role`/`RefreshToken`/`OAuthAccount`/`PasswordResetToken` + migration; JWT access/refresh; RBAC guard; băm mật khẩu; rule cấp quyền Giáo viên `ASM-BACKLOG-06`.
     - [x] **Frontend:** Trang Register/Login/Forgot/Reset + OAuth callback + Profile; route guard theo vai trò; form shadcn/ui + zod; Zustand auth store; xử lý refresh token.
   - **Trạng thái 2026-11-25:** 5/6 AC verified (132 unit tests, 8 E2E pass). Chỉ còn AC OAuth: chạy lệnh opt-in `corepack pnpm --filter web test:e2e:google` với tài khoản Google test (`E2E_GOOGLE_EMAIL`, `E2E_GOOGLE_PASSWORD`) và client Google đã đăng ký redirect URI. **KHÔNG implement lại story này** khi `/continue` — chỉ chạy bước verify còn lại, sau đó chuyển `[x]`. Chi tiết: `.specify/features/auth-role-foundation/decisions.md`, `docs/features/auth-role-foundation/README.md`.
+  - **Waiver 2026-11-26:** Người dùng chọn tạm thời bỏ qua bước verify Google E2E để triển khai story tiếp theo. Story này GIỮ NGUYÊN `[/]` — AC OAuth vẫn chưa verified; downstream được phép chạy theo quyết định người dùng. Cần chạy `test:e2e:google` và chuyển `[x]` trước Go-Live.
   - **Deliverables khi [x]:**
     - `.specify/features/auth-role-foundation/baseline.md` (SIGNED-OFF)
     - `docs/features/auth-role-foundation/README.md`
     - `docs/user-guides/auth-role-foundation.md` (ảnh Playwright thật)
 
-- [ ] **US-CLS-001**: Tạo lớp học, mã lớp & học sinh tham gia
+- [x] **US-CLS-001**: Tạo lớp học, mã lớp & học sinh tham gia
   - **Slug:** `classroom-join-code`
   - **Effort:** M
   - **Context-budget:** single-session
   - **Priority:** Must-Have (P0)
-  - **Depends-on:** `US-AUTH-001`
+  - **Depends-on:** `US-AUTH-001` _(waived 2026-11-26 cho Google E2E; code/auth đã sẵn sàng)_
   - **Blocks:** `US-EXAM-001`
   - **Mô tả:** Giáo viên tạo lớp và chia mã lớp; học sinh nhập mã để tham gia; giáo viên kiểm soát danh sách học sinh trong lớp của mình.
   - **Acceptance Criteria (AC):**
-    - [ ] Giáo viên tạo lớp và nhận một mã lớp duy nhất.
-    - [ ] Học sinh nhập mã lớp hợp lệ thì gửi yêu cầu tham gia và xuất hiện trong danh sách chờ duyệt.
-    - [ ] Giáo viên duyệt hoặc xóa học sinh khỏi lớp do mình tạo.
-    - [ ] Giáo viên chỉ thấy lớp mình tạo; học sinh chỉ thấy lớp mình đã tham gia.
+    - [x] Giáo viên tạo lớp và nhận một mã lớp duy nhất.
+    - [x] Học sinh nhập mã lớp hợp lệ thì gửi yêu cầu tham gia và xuất hiện trong danh sách chờ duyệt.
+    - [x] Giáo viên duyệt hoặc xóa học sinh khỏi lớp do mình tạo.
+    - [x] Giáo viên chỉ thấy lớp mình tạo; học sinh chỉ thấy lớp mình đã tham gia.
   - **Tasks (Phân rã kỹ thuật cho Subagents):**
-    - [ ] **Backend:** `POST/GET /classrooms`, `DELETE /classrooms/:id`, `POST /classrooms/:code/join`, `PATCH /classrooms/:id/enrollments/:userId/approve`, `DELETE .../enrollments/:userId`; Prisma `Classroom`/`Enrollment`/`ClassCode` + migration; generator mã unique; ownership guard; scope query theo `userId`.
-    - [ ] **Frontend:** `ClassroomList`, `CreateClassroomDialog`, trang `JoinByCode` với form validate, `StudentRoster` với nút duyệt/xóa, trạng thái chờ duyệt.
+    - [x] **Backend:** `POST/GET /classrooms`, `DELETE /classrooms/:id`, `POST /classrooms/:code/join`, `PATCH /classrooms/:id/enrollments/:userId/approve`, `DELETE .../enrollments/:userId`; Prisma `Classroom`/`Enrollment`/`ClassCode` + migration; generator mã unique; ownership guard; scope query theo `userId`.
+    - [x] **Frontend:** `ClassroomList`, `CreateClassroomDialog`, trang `JoinByCode` với form validate, `StudentRoster` với nút duyệt/xóa, trạng thái chờ duyệt.
+  - **Trạng thái 2026-11-26:** Hoàn thành. 165 unit tests (108 API + 57 web), build/lint/typecheck xanh, migration `20261126093000_add_classrooms` applied, Playwright `e2e/classrooms.spec.ts` pass (tạo lớp → join → duyệt → học sinh thấy lớp). Code review + UI review: zero Critical, mọi finding đã xử lý.
   - **Deliverables khi [x]:**
-    - `.specify/features/classroom-join-code/baseline.md` (SIGNED-OFF)
+    - `.specify/features/classroom-join-code/contract.md` + `decisions.md` + `test-plan.md` _(Tier 2 lean bypass — không dùng baseline.md SIGNED-OFF)_
     - `docs/features/classroom-join-code/README.md`
+    - `docs/user-guides/classroom-join-code.md` (ảnh Playwright thật)
 
-- [ ] **US-QB-001**: Ngân hàng câu hỏi — 5 dạng, phân loại & lời giải
+- [x] **US-QB-001**: Ngân hàng câu hỏi — 5 dạng, phân loại & lời giải
   - **Slug:** `question-bank-core`
   - **Effort:** L
   - **Context-budget:** multi-session
   - **Priority:** Must-Have (P0)
-  - **Depends-on:** `US-AUTH-001`
+  - **Depends-on:** `US-AUTH-001` _(waived 2026-11-26 cho Google E2E; code/auth đã sẵn sàng)_
   - **Blocks:** `US-EXAM-001`, `US-QB-002`, `US-EXAM-002`, `US-PRA-001`
   - **Mô tả:** Giáo viên xây dựng và tái sử dụng kho câu hỏi được phân loại rõ ràng, đủ 5 dạng và có lời giải chi tiết.
   - **Acceptance Criteria (AC):**
-    - [ ] Giáo viên thêm, sửa, xóa câu hỏi.
-    - [ ] Hỗ trợ 5 dạng: một đáp án đúng, nhiều đáp án đúng, đúng/sai, điền từ vào chỗ trống, ghép cặp `ASM-BACKLOG-01`.
-    - [ ] Câu hỏi được gắn môn học, chương và độ khó (dễ / trung bình / khó).
-    - [ ] Giáo viên chèn được hình ảnh, công thức toán `ASM-BACKLOG-02` và đoạn code vào nội dung câu hỏi.
-    - [ ] Mỗi câu có lời giải chi tiết và hiển thị đúng khi được phép.
-    - [ ] Giáo viên lọc danh sách câu hỏi theo môn, chương, độ khó; học sinh không truy cập được ngân hàng câu hỏi.
+    - [x] Giáo viên thêm, sửa, xóa câu hỏi.
+    - [x] Hỗ trợ 5 dạng: một đáp án đúng, nhiều đáp án đúng, đúng/sai, điền từ vào chỗ trống, ghép cặp `ASM-BACKLOG-01`.
+    - [x] Câu hỏi được gắn môn học, chương và độ khó (dễ / trung bình / khó).
+    - [x] Giáo viên chèn được hình ảnh, công thức toán `ASM-BACKLOG-02` và đoạn code vào nội dung câu hỏi.
+    - [x] Mỗi câu có lời giải chi tiết và hiển thị đúng khi được phép.
+    - [x] Giáo viên lọc danh sách câu hỏi theo môn, chương, độ khó; học sinh không truy cập được ngân hàng câu hỏi.
   - **Tasks (Phân rã kỹ thuật cho Subagents):**
-    - [ ] **Backend:** `POST/GET/PATCH/DELETE /questions`; DTO discriminated union theo `questionType` + schema zod cho từng dạng; Prisma `Question`/`Option`/`MatchingPair`/`Subject`/`Chapter` + migration; RBAC teacher-only; endpoint upload asset; validate lời giải.
-    - [ ] **Frontend:** `QuestionBankTable` với bộ lọc; `QuestionEditor` với 5 form riêng theo dạng; rich-text/MathJax/code block; dialog xóa có xác nhận; phân trang.
+    - [x] **Backend:** `POST/GET/PATCH/DELETE /questions`; DTO discriminated union theo `questionType` + schema zod cho từng dạng; Prisma `Question`/`Option`/`MatchingPair`/`Subject`/`Chapter` + migration; RBAC teacher-only; endpoint upload asset; validate lời giải.
+    - [x] **Frontend:** `QuestionBankTable` với bộ lọc; `QuestionEditor` với 5 form riêng theo dạng; rich-text/MathJax/code block; dialog xóa có xác nhận; phân trang.
+  - **Trạng thái 2026-11-26:** Hoàn thành. 322 unit/integration test xanh (230 API + 92 web), typecheck/lint/build xanh, migration `20261126032044_question_bank_core` applied, Playwright `e2e/questions.spec.ts` 3/3 pass với API + Postgres thật. Code review Round 2 PASS, UI/UX review zero Critical. Benchmark 5 000 câu/teacher: p95 8.3 ms (ngưỡng 400 ms). Catalog và câu hỏi được ghi trong cùng một transaction. `RISK-QB-005` đã chuyển thành ràng buộc handover cho `US-EXAM-001` / `US-ATT-001`.
   - **Deliverables khi [x]:**
-    - `.specify/features/question-bank-core/baseline.md` (SIGNED-OFF)
+    - `.specify/features/question-bank-core/baseline.md` (SIGNED-OFF v1.0)
     - `docs/features/question-bank-core/README.md`
+    - `docs/user-guides/question-bank-core.md` (ảnh Playwright thật)
 
-- [ ] **US-EXAM-001**: Tạo đề thủ công, cấu hình & giao cho lớp
+- [x] **US-EXAM-001**: Tạo đề thủ công, cấu hình & giao cho lớp
   - **Slug:** `exam-authoring-assignment`
+  - **Trạng thái:** `DEV_COMPLETE` — code review Approve, UI Pass; cả 5 Medium đã đóng, không còn Critical/High/Medium trong phạm vi review. Bằng chứng đóng finding (`.specify/features/exam-authoring-assignment/CHANGELOG.md#five-medium-resolution`, local workflow).
   - **Effort:** L
   - **Context-budget:** multi-session
   - **Priority:** Must-Have (P0)
@@ -200,14 +206,14 @@ Decision log: docs/SPRINT_0_PLAN.md section 8 (8/8 locked 2026-11-25).
   - **Blocks:** `US-ATT-001`, `US-EXAM-002`
   - **Mô tả:** Giáo viên chọn câu từ ngân hàng để lập đề, thiết lập điều kiện làm bài và phát cho đúng lớp, với trạng thái đề rõ ràng.
   - **Acceptance Criteria (AC):**
-    - [ ] Giáo viên tạo đề thủ công bằng cách chọn câu hỏi từ ngân hàng.
-    - [ ] Giáo viên cài đặt thời gian làm bài, thời gian mở/đóng đề, số lần làm tối đa, mật khẩu vào đề, và cho phép/không cho phép xem đáp án sau khi nộp `ASM-BACKLOG-08`.
-    - [ ] Giáo viên giao đề cho một hoặc nhiều lớp do mình quản lý.
-    - [ ] Đề có 3 trạng thái: nháp / đang mở / đã đóng, và trạng thái điều khiển được việc học sinh thấy đề.
-    - [ ] Học sinh chỉ thấy đề được giao cho lớp mình tham gia.
+    - [x] Giáo viên tạo đề thủ công bằng cách chọn câu hỏi từ ngân hàng.
+    - [x] Giáo viên cài đặt thời gian làm bài, thời gian mở/đóng đề, số lần làm tối đa, mật khẩu vào đề, và cho phép/không cho phép xem đáp án sau khi nộp `ASM-BACKLOG-08`.
+    - [x] Giáo viên giao đề cho một hoặc nhiều lớp do mình quản lý.
+    - [x] Đề có 4 trạng thái: nháp / chờ mở / đang mở / đã đóng, và trạng thái điều khiển được việc học sinh thấy đề. _(Người dùng chốt 2026-11-26: thêm chờ mở sau xuất bản; được thu hồi về nháp trước giờ mở; đã đóng không mở lại.)_
+    - [x] Học sinh chỉ thấy đề được giao cho lớp mình tham gia.
   - **Tasks (Phân rã kỹ thuật cho Subagents):**
-    - [ ] **Backend:** `POST/GET/PATCH/DELETE /exams`, `POST /exams/:id/assign`; DTO cấu hình + validate cửa sổ thời gian; Prisma `Exam`/`ExamQuestion`/`ExamAssignment`/`ExamStatus` + migration; state machine nháp→mở→đóng; băm mật khẩu đề; ownership guard; lọc đề theo lớp của học sinh.
-    - [ ] **Frontend:** `ExamList`, `ExamBuilder` (question picker từ `US-QB-001`), `ExamSettings` form, `AssignToClassesDialog`, badge + hành động theo trạng thái, `StudentExamList` (sắp mở / đang mở / đã làm).
+    - [x] **Backend:** API giáo viên `/teacher/exams` (PATCH theo operation có `If-Match`) và API metadata học sinh `/student/exams`; Exam/snapshot/current assignment/history, migration cộng thêm, lịch máy chủ, băm mật khẩu và quyền sở hữu. Hợp đồng chi tiết tại [README](features/exam-authoring-assignment/README.md#api-reference).
+    - [x] **Frontend:** Danh sách/editor giáo viên, chọn snapshot, cấu hình, giao lớp, lịch sử, xuất bản/thu hồi/đóng sớm; danh sách/chi tiết metadata học sinh. Luồng làm bài thuộc `US-ATT-001`; năm finding Medium đã được xác nhận đóng trong lịch sử follow-up.
   - **Deliverables khi [x]:**
     - `.specify/features/exam-authoring-assignment/baseline.md` (SIGNED-OFF)
     - `docs/features/exam-authoring-assignment/README.md`

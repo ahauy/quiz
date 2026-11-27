@@ -50,6 +50,22 @@ export const profileSchema = z.object({
 });
 export type ProfileInput = z.infer<typeof profileSchema>;
 
+export const createClassroomSchema = z.object({
+  name: z.string().trim().min(1, "Tên lớp là bắt buộc"),
+});
+export type CreateClassroomInput = z.infer<typeof createClassroomSchema>;
+
+// Codes are 6 uppercase alphanumeric characters on the wire; normalise lowercase input.
+export const joinByCodeSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .min(1, "Mã lớp là bắt buộc")
+    .regex(/^[A-Z0-9]{6}$/, "Mã lớp phải có đúng 6 ký tự chữ hoặc số"),
+});
+export type JoinByCodeInput = z.infer<typeof joinByCodeSchema>;
+
 export function fieldErrors(error: ZodError): Record<string, string> {
   const result: Record<string, string> = {};
   for (const issue of error.issues) {

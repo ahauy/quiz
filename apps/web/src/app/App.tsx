@@ -31,7 +31,10 @@ function Header() {
         {userId ? null : <Link to="/register">Đăng ký</Link>}
         {userId ? <Link to="/profile">Hồ sơ</Link> : null}
         {role === Role.TEACHER ? <Link to="/teacher">Giáo viên</Link> : null}
+        {role === Role.TEACHER ? <Link to="/teacher/classrooms">Lớp học</Link> : null}
         {role === Role.STUDENT ? <Link to="/student">Học sinh</Link> : null}
+        {role === Role.STUDENT ? <Link to="/student/classrooms">Lớp học</Link> : null}
+        {role === Role.STUDENT ? <Link to="/student/join">Tham gia lớp</Link> : null}
         {userId ? (
           <Button variant="secondary" onClick={onLogout}>Đăng xuất</Button>
         ) : null}

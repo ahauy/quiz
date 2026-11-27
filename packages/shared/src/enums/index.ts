@@ -22,10 +22,32 @@ export type QuestionType = (typeof QuestionType)[keyof typeof QuestionType];
 
 export const ExamStatus = {
   DRAFT: "DRAFT",
+  SCHEDULED: "SCHEDULED",
   OPEN: "OPEN",
   CLOSED: "CLOSED",
 } as const;
 export type ExamStatus = (typeof ExamStatus)[keyof typeof ExamStatus];
+
+export const ExamPhase = {
+  SCHEDULED: "SCHEDULED",
+  OPEN: "OPEN",
+  CLOSED: "CLOSED",
+} as const;
+export type ExamPhase = (typeof ExamPhase)[keyof typeof ExamPhase];
+
+export const ExamActionType = {
+  PUBLISHED: "PUBLISHED",
+  WITHDRAWN: "WITHDRAWN",
+  ASSIGNMENTS_UPDATED: "ASSIGNMENTS_UPDATED",
+} as const;
+export type ExamActionType =
+  (typeof ExamActionType)[keyof typeof ExamActionType];
+
+export const EnrollmentStatus = {
+  PENDING: "PENDING",
+  APPROVED: "APPROVED",
+} as const;
+export type EnrollmentStatus = (typeof EnrollmentStatus)[keyof typeof EnrollmentStatus];
 
 export const ViolationType = {
   TAB_SWITCH: "TAB_SWITCH",

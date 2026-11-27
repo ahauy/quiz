@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { Role } from "@quiz/shared";
 import { useAuthStore } from "@/stores/auth-store.js";
 import { HomePage } from "@/pages/home";
@@ -11,6 +11,14 @@ import { OAuthCallbackPage } from "@/pages/oauth-callback";
 import { ProfilePage } from "@/pages/profile";
 import { TeacherPage } from "@/pages/teacher";
 import { StudentPage } from "@/pages/student";
+import { TeacherClassroomsPage } from "@/pages/teacher-classrooms";
+import { StudentClassroomsPage } from "@/pages/student-classrooms";
+import { JoinByCodePage } from "@/pages/join-by-code";
+import { QuestionBankPage, QuestionEditorPage } from "@/pages/teacher-questions";
+import { TeacherExamsPage } from "@/pages/teacher-exams/teacher-exams-page.js";
+import { TeacherExamEditorPage } from "@/pages/teacher-exams/teacher-exam-editor-page.js";
+import { StudentExamsPage } from "@/pages/student-exams/student-exams-page.js";
+import { StudentExamDetailPage } from "@/pages/student-exams/student-exam-detail-page.js";
 
 interface GuardProps {
   allow: readonly Role[];
@@ -26,6 +34,20 @@ export function RoleGuard({ allow, children }: GuardProps) {
     return <Navigate to="/" replace />;
   }
   return <>{children}</>;
+}
+
+function examRoutes() {
+  return <>
+    <Route path="/teacher/exams" element={<RoleGuard allow={[Role.TEACHER]}><Outlet /></RoleGuard>}>
+      <Route index element={<TeacherExamsPage />} />
+      <Route path="new" element={<TeacherExamEditorPage />} />
+      <Route path=":id" element={<TeacherExamEditorPage />} />
+    </Route>
+    <Route path="/student/exams" element={<RoleGuard allow={[Role.STUDENT]}><Outlet /></RoleGuard>}>
+      <Route index element={<StudentExamsPage />} />
+      <Route path=":id" element={<StudentExamDetailPage />} />
+    </Route>
+  </>;
 }
 
 export function AppRoutes() {
@@ -61,6 +83,57 @@ export function AppRoutes() {
           </RoleGuard>
         }
       />
+      <Route
+        path="/teacher/classrooms"
+        element={
+          <RoleGuard allow={[Role.TEACHER]}>
+            <TeacherClassroomsPage />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/student/classrooms"
+        element={
+          <RoleGuard allow={[Role.STUDENT]}>
+            <StudentClassroomsPage />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/student/join"
+        element={
+          <RoleGuard allow={[Role.STUDENT]}>
+            <JoinByCodePage />
+          </RoleGuard>
+        }
+      />
+      {/* Bank routes are TEACHER-only. There is deliberately no student route
+          or link to the question bank (BR-QB-002, US-QB-006). */}
+      <Route
+        path="/teacher/questions"
+        element={
+          <RoleGuard allow={[Role.TEACHER]}>
+            <QuestionBankPage />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/teacher/questions/new"
+        element={
+          <RoleGuard allow={[Role.TEACHER]}>
+            <QuestionEditorPage />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/teacher/questions/:id/edit"
+        element={
+          <RoleGuard allow={[Role.TEACHER]}>
+            <QuestionEditorPage />
+          </RoleGuard>
+        }
+      />
+      {examRoutes()}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

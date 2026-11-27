@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { ErrorBoundary } from "./app/error-boundary.js";
 import { App } from "./app/App.js";
 import { bootstrapAuth } from "./app/auth-bootstrap.js";
+import "katex/dist/katex.min.css"; // once, app-level (ADR-QB-05)
 import "./index.css";
 
 bootstrapAuth();

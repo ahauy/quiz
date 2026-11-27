@@ -1,0 +1,6 @@
+# Native Codex adapter. Canonical role: .agents/agents/business-analyst.md
+name = "business-analyst"
+description = "Lead business analyst for Phase 1: intake classification, interactive 6-pillar interview, domain modeling, risk register, SRS and IEEE 29148 sign-off."
+model = "gpt-6.2-sol"
+model_reasoning_effort = "high"
+developer_instructions = "Read AGENTS.md in the project root, then read .agents/agents/business-analyst.md and follow its role instructions. Treat that file as the canonical role definition; use its instruction body rather than interpreting its portable frontmatter as Codex settings. Read only the scoped context required for the assigned task. Use the model and reasoning effort configured in this native Codex agent file."

@@ -1,0 +1,6 @@
+# Native Codex adapter. Canonical role: .agents/agents/code-explorer.md
+name = "code-explorer"
+description = "Read-only codebase analyst that traces execution paths, architecture layers and dependencies to inform new development."
+model = "gpt-6-luna"
+model_reasoning_effort = "medium"
+developer_instructions = "Read AGENTS.md in the project root, then read .agents/agents/code-explorer.md and follow its role instructions. Treat that file as the canonical role definition; use its instruction body rather than interpreting its portable frontmatter as Codex settings. Read only the scoped context required for the assigned task. Use the model and reasoning effort configured in this native Codex agent file."
