@@ -17,6 +17,18 @@ enum EnrollmentStatus {
   APPROVED
 }
 
+enum ExamPhase {
+  SCHEDULED
+  OPEN
+  CLOSED
+}
+
+enum ExamActionType {
+  PUBLISHED
+  WITHDRAWN
+  ASSIGNMENTS_UPDATED
+}
+
 // Sprint 0 skeleton probe kept for the accepted baseline migration.
 model HealthProbe {
   id        Int      @id @default(autoincrement())
@@ -38,6 +50,10 @@ model User {
   passwordResetTokens PasswordResetToken[]
   classrooms          Classroom[]
   enrollments         Enrollment[]
+  subjects            Subject[]
+  questions           Question[]
+  exams               Exam[]
+  examActions         ExamActionHistory[]
 }
 
 model RefreshToken {
@@ -80,14 +96,15 @@ model PasswordResetToken {
 }
 
 model Classroom {
-  id          String       @id @default(uuid())
-  name        String
-  teacherId   String
-  teacher     User         @relation(fields: [teacherId], references: [id])
-  code        ClassCode?
-  enrollments Enrollment[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id              String                  @id @default(uuid())
+  name            String
+  teacherId       String
+  teacher         User                    @relation(fields: [teacherId], references: [id])
+  code            ClassCode?
+  enrollments     Enrollment[]
+  examAssignments CurrentExamAssignment[]
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
 
   @@index([teacherId])
 }
@@ -112,4 +129,184 @@ model Enrollment {
 
   @@unique([classroomId, userId])
   @@index([userId])
+}
+
+// ── question-bank-core (US-QB-001) ───────────────────────────────────────────
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  FILL_BLANK
+  MATCHING
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Subject {
+  id        String     @id @default(uuid())
+  teacherId String
+  name      String
+  nameKey   String
+  teacher   User       @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  chapters  Chapter[]
+  questions Question[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([teacherId, nameKey])
+  @@index([teacherId])
+}
+
+model Chapter {
+  id        String     @id @default(uuid())
+  subjectId String
+  name      String
+  nameKey   String
+  subject   Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  questions Question[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([subjectId, nameKey])
+  @@index([subjectId])
+}
+
+model Question {
+  id              String            @id @default(uuid())
+  teacherId       String
+  type            QuestionType
+  content         String            @db.Text
+  difficulty      Difficulty
+  explanation     String            @db.Text
+  subjectId       String
+  chapterId       String
+  trueFalseAnswer Boolean?
+  teacher         User              @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject         Subject           @relation(fields: [subjectId], references: [id], onDelete: NoAction)
+  chapter         Chapter           @relation(fields: [chapterId], references: [id], onDelete: NoAction)
+  options         QuestionOption[]
+  fillAnswers     FillBlankAnswer[]
+  pairs           MatchingPair[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([teacherId, updatedAt])
+  @@index([teacherId, subjectId, chapterId])
+  @@index([teacherId, difficulty])
+  @@index([teacherId, type])
+}
+
+model QuestionOption {
+  id         String   @id @default(uuid())
+  questionId String
+  text       String
+  isCorrect  Boolean  @default(false)
+  position   Int
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+model FillBlankAnswer {
+  id         String   @id @default(uuid())
+  questionId String
+  text       String
+  normalized String
+  position   Int
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, normalized])
+  @@index([questionId])
+}
+
+model MatchingPair {
+  id              String   @id @default(uuid())
+  questionId      String
+  leftText        String
+  leftNormalized  String
+  rightText       String
+  rightNormalized String
+  position        Int
+  question        Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, leftNormalized])
+  @@unique([questionId, rightNormalized])
+  @@index([questionId])
+}
+
+model Exam {
+  id                  String                  @id @default(uuid())
+  teacherId           String
+  title               String
+  durationMinutes     String?                 @db.Text
+  maxAttempts         String?                 @db.Text
+  allowAnswerReview   Boolean?
+  opensAt             DateTime?               @db.Timestamptz(3)
+  closesAt            DateTime?               @db.Timestamptz(3)
+  passwordHash        String?                 @db.Text
+  firstPublishedAt    DateTime?               @db.Timestamptz(3)
+  activePublicationId String?
+  activePhase         ExamPhase?
+  earlyClosedAt       DateTime?               @db.Timestamptz(3)
+  snapshotHeadId      String?
+  snapshotTailId      String?
+  snapshotCount       BigInt                  @default(0)
+  revision            String                  @default(uuid())
+  lastMutationId      String
+  createdAt           DateTime                @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime                @updatedAt @db.Timestamptz(3)
+  teacher             User                    @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  snapshots           ExamQuestionSnapshot[]
+  assignments         CurrentExamAssignment[]
+  history             ExamActionHistory[]
+
+  @@index([teacherId, createdAt(sort: Desc), id(sort: Desc)])
+}
+
+model ExamQuestionSnapshot {
+  id               String                @id @default(uuid())
+  examId           String
+  sourceQuestionId String
+  capturedAt       DateTime              @db.Timestamptz(3)
+  payload          Json                  @db.JsonB
+  nextSnapshotId   String?
+  exam             Exam                  @relation(fields: [examId], references: [id], onDelete: Cascade, map: "exam_snapshot_exam_fkey")
+  next             ExamQuestionSnapshot? @relation("ExamSnapshotChain", fields: [examId, nextSnapshotId], references: [examId, id], onDelete: Restrict, map: "exam_snapshot_same_exam_next_fkey")
+  previous         ExamQuestionSnapshot? @relation("ExamSnapshotChain")
+
+  @@unique([examId, id], map: "exam_snapshot_exam_id_id_key")
+  @@unique([examId, sourceQuestionId], map: "exam_snapshot_exam_source_key")
+  // The SQL migration keeps this compound uniqueness DEFERRABLE for safe relinking.
+  @@unique([examId, nextSnapshotId], map: "exam_snapshot_one_predecessor")
+}
+
+model CurrentExamAssignment {
+  examId      String
+  classroomId String
+  assignedAt  DateTime  @default(now()) @db.Timestamptz(3)
+  exam        Exam      @relation(fields: [examId], references: [id], onDelete: Cascade, map: "current_exam_assignment_exam_fkey")
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Restrict, map: "current_exam_assignment_classroom_fkey")
+
+  @@id([examId, classroomId])
+  @@index([classroomId, examId], map: "current_exam_assignment_class_exam_idx")
+}
+
+model ExamActionHistory {
+  id                String         @id @default(uuid())
+  examId            String
+  ordinal           BigInt
+  action            ExamActionType
+  actedAt           DateTime       @db.Timestamptz(3)
+  actorId           String
+  resultingRevision String
+  payload           Json           @db.JsonB
+  exam              Exam           @relation(fields: [examId], references: [id], onDelete: Restrict, map: "exam_action_exam_fkey")
+  actor             User           @relation(fields: [actorId], references: [id], onDelete: Restrict, map: "exam_action_actor_fkey")
+
+  @@unique([examId, ordinal], map: "exam_action_exam_ordinal_key")
+  @@index([examId, ordinal(sort: Desc)], map: "exam_action_exam_ordinal_desc_idx")
 }
