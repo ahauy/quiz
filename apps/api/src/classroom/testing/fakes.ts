@@ -108,11 +108,15 @@ export class InMemoryClassroomRepository extends ClassroomRepository {
     return result.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   }
 
-  override async deleteClassroom(id: string): Promise<void> {
+  override async deleteClassroom(id: string, teacherId: string): Promise<"deleted" | "not-found" | "forbidden" | "published-exam"> {
+    const classroom = this.classrooms.get(id);
+    if (!classroom) return "not-found";
+    if (classroom.teacherId !== teacherId) return "forbidden";
     this.classrooms.delete(id);
     for (const [key, enrollment] of this.enrollments) {
       if (enrollment.classroomId === id) this.enrollments.delete(key);
     }
+    return "deleted";
   }
 
   override async createEnrollment(input: CreateEnrollmentInput): Promise<EnrollmentRecord> {

@@ -5,7 +5,8 @@ export type ClassroomErrorCode =
   | "CLASSROOM_NOT_FOUND"
   | "ENROLLMENT_NOT_FOUND"
   | "FORBIDDEN"
-  | "UNAUTHORIZED";
+  | "UNAUTHORIZED"
+  | "CLASSROOM_LINKED_TO_PUBLISHED_EXAM";
 
 export const CLASSROOM_ERROR_STATUS: Record<ClassroomErrorCode, number> = {
   CLASS_CODE_NOT_FOUND: 404,
@@ -13,6 +14,7 @@ export const CLASSROOM_ERROR_STATUS: Record<ClassroomErrorCode, number> = {
   ENROLLMENT_NOT_FOUND: 404,
   FORBIDDEN: 403,
   UNAUTHORIZED: 401,
+  CLASSROOM_LINKED_TO_PUBLISHED_EXAM: 409,
 };
 
 export class ClassroomException extends HttpException {

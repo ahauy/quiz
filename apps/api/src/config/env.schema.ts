@@ -10,6 +10,7 @@ export const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
   CORS_ORIGINS: z.string().default("http://localhost:5173"),
   TEACHER_CODE: z.string().min(1),
+  UPLOAD_DIR: z.string().min(1),
   VIOLATION_WARN_AT: z.coerce.number().int().positive().default(2),
   VIOLATION_SUBMIT_AT: z.coerce.number().int().positive().default(3),
   OAUTH_GOOGLE_CLIENT_ID: z.string().min(1),

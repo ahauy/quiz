@@ -11,7 +11,7 @@ export abstract class ClassroomRepository {
   abstract findClassroomByCode(code: string): Promise<ClassroomRecord | null>;
   abstract listTeacherClassrooms(teacherId: string): Promise<ClassroomRecord[]>;
   abstract listStudentClassrooms(userId: string): Promise<ClassroomRecord[]>;
-  abstract deleteClassroom(id: string): Promise<void>;
+  abstract deleteClassroom(id: string, teacherId: string): Promise<"deleted" | "not-found" | "forbidden" | "published-exam">;
 
   abstract createEnrollment(input: CreateEnrollmentInput): Promise<EnrollmentRecord>;
   abstract findEnrollment(classroomId: string, userId: string): Promise<EnrollmentRecord | null>;

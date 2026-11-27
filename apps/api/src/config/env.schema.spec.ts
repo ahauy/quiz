@@ -6,6 +6,7 @@ const validEnv = {
   JWT_SECRET: "a".repeat(64),
   JWT_REFRESH_SECRET: "b".repeat(64),
   TEACHER_CODE: "TEACH-2026",
+  UPLOAD_DIR: "./uploads",
   OAUTH_GOOGLE_CLIENT_ID: "client-id",
   OAUTH_GOOGLE_CLIENT_SECRET: "client-secret",
 };
@@ -28,5 +29,11 @@ describe("validateEnv", () => {
     const withoutDb = { ...validEnv };
     delete (withoutDb as Partial<typeof validEnv>).DATABASE_URL;
     expect(() => validateEnv(withoutDb)).toThrowError(/DATABASE_URL/);
+  });
+
+  it("requires UPLOAD_DIR for local asset storage", () => {
+    const withoutUploadDir = { ...validEnv };
+    delete (withoutUploadDir as Partial<typeof validEnv>).UPLOAD_DIR;
+    expect(() => validateEnv(withoutUploadDir)).toThrowError(/UPLOAD_DIR/);
   });
 });

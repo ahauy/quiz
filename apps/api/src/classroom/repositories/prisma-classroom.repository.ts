@@ -1,6 +1,6 @@
 import type { Classroom, ClassCode, Enrollment, User } from "@prisma/client";
 import { Injectable } from "@nestjs/common";
-import { EnrollmentStatus } from "@quiz/shared";
+import { EnrollmentStatus } from "@prisma/client";
 import type {
   ClassroomRecord,
   CreateClassroomInput,
@@ -8,6 +8,8 @@ import type {
   EnrollmentRecord,
 } from "../classroom.types.js";
 import { PrismaService } from "../../prisma/prisma.service.js";
+import { lockTeacherForExamWrite } from "../../prisma/lock-teacher-for-exam-write.js";
+import { randomUUID } from "node:crypto";
 import { ClassroomRepository } from "./classroom.repository.js";
 
 type ClassroomWithCode = Classroom & { code: ClassCode | null };
@@ -62,8 +64,35 @@ export class PrismaClassroomRepository extends ClassroomRepository {
     return rows.map((row) => this.toClassroom(row));
   }
 
-  override async deleteClassroom(id: string): Promise<void> {
-    await this.prisma.classroom.delete({ where: { id } });
+  override async deleteClassroom(id: string, teacherId: string): Promise<"deleted" | "not-found" | "forbidden" | "published-exam"> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SET LOCAL lock_timeout = '2s'`;
+      const teacher = await lockTeacherForExamWrite(tx, teacherId);
+      if (!teacher || teacher.role !== "TEACHER") return "forbidden";
+      const linked = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT e."id" FROM "Exam" e
+        JOIN "CurrentExamAssignment" a ON a."examId" = e."id"
+        WHERE a."classroomId" = ${id}
+        ORDER BY e."id" FOR UPDATE OF e
+      `;
+      const ids = linked.map(({ id: examId }) => examId);
+      const exams = ids.length ? await tx.exam.findMany({ where: { id: { in: ids } }, select: { id: true, firstPublishedAt: true } }) : [];
+      const classroomRows = await tx.$queryRaw<Array<{ id: string; teacherId: string }>>`
+        SELECT "id", "teacherId" FROM "Classroom" WHERE "id" = ${id} FOR UPDATE
+      `;
+      const classroom = classroomRows[0];
+      if (!classroom) return "not-found";
+      if (classroom.teacherId !== teacherId) return "forbidden";
+      if (exams.some((exam) => exam.firstPublishedAt !== null)) return "published-exam";
+      const [clock] = await tx.$queryRaw<Array<{ now: Date }>>`SELECT clock_timestamp() AS now`;
+      if (!clock) throw new Error("EXAM_WRITE_BUSY");
+      for (const exam of exams) {
+        await tx.exam.update({ where: { id: exam.id }, data: { revision: randomUUID(), lastMutationId: randomUUID(), updatedAt: clock.now } });
+      }
+      await tx.currentExamAssignment.deleteMany({ where: { classroomId: id } });
+      await tx.classroom.delete({ where: { id } });
+      return "deleted";
+    }, { maxWait: 2000, timeout: 5000 });
   }
 
   override async createEnrollment(input: CreateEnrollmentInput): Promise<EnrollmentRecord> {

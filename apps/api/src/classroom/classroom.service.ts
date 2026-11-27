@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import type { ClassroomDto, EnrollmentDto, OkDto } from "@quiz/shared";
-import { EnrollmentStatus, Role } from "@quiz/shared";
+import { EnrollmentStatus } from "@prisma/client";
+import { ROLE as Role } from "../auth/utils/role-value.js";
 import type { ClassroomRecord, CurrentUser, EnrollmentRecord } from "./classroom.types.js";
 import type { CreateClassroomDto } from "./dto/index.js";
 import { classroomError } from "./errors.js";
@@ -51,8 +52,11 @@ export class ClassroomService {
   }
 
   async removeClassroom(user: CurrentUser, classroomId: string): Promise<OkDto> {
-    const classroom = await this.requireOwnedClassroom(user, classroomId);
-    await this.repo.deleteClassroom(classroom.id);
+    await this.requireOwnedClassroom(user, classroomId);
+    const result = await this.repo.deleteClassroom(classroomId, user.id);
+    if (result === "not-found") throw classroomError("CLASSROOM_NOT_FOUND", "Classroom not found");
+    if (result === "forbidden") throw classroomError("FORBIDDEN", "Classroom belongs to another teacher");
+    if (result === "published-exam") throw classroomError("CLASSROOM_LINKED_TO_PUBLISHED_EXAM", "Classroom is assigned to an exam that has been published");
     return { ok: true };
   }
 

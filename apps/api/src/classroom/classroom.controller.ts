@@ -12,7 +12,7 @@ import {
 } from "@nestjs/common";
 import type { Request } from "express";
 import type { ClassroomDto, EnrollmentDto, OkDto } from "@quiz/shared";
-import { Role } from "@quiz/shared";
+import { ROLE as Role } from "../auth/utils/role-value.js";
 import { Roles } from "../common/decorators/roles.decorator.js";
 import type { ApiOkBody } from "../common/schemas/api-response.js";
 import type { CurrentUser } from "./classroom.types.js";

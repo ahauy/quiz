@@ -4,6 +4,9 @@ import { PrismaModule } from "./prisma/prisma.module.js";
 import { HealthModule } from "./health/health.module.js";
 import { AuthModule } from "./auth/auth.module.js";
 import { ClassroomModule } from "./classroom/classroom.module.js";
+import { QuestionsModule } from "./questions/questions.module.js";
+import { AssetsModule } from "./assets/assets.module.js";
+import { ExamsModule } from "./exams/exams.module.js";
 import { validateEnv } from "./config/env.schema.js";
 
 @Module({
@@ -17,6 +20,9 @@ import { validateEnv } from "./config/env.schema.js";
     HealthModule,
     AuthModule,
     ClassroomModule,
+    QuestionsModule,
+    AssetsModule,
+    ExamsModule,
   ],
 })
 export class AppModule {}
